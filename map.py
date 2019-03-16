@@ -291,6 +291,10 @@ scenery = {
     50: [[45,4,8], [11,1,1], [13,1,8], [33,2,1], [46,4,6]] 
     }
 
+for room in range(1, 26):
+    if room != 13:
+        scenery_item = random.choice([16, 28, 29, 30])
+        scenery[room] = [[scenery_item, random.randint(2, 10),random.randint(2, 10)]]
 
 ##############
 ## make map ##
@@ -370,20 +374,28 @@ def generate_map():
 
     if current_room in scenery:
         for this_scenery in scenery[current_room]:
-            print(this_scenery)
+            scenery_number=this_scenery[0]
+            scenery_y=this_scenery[1]
+            scenery_x=this_scenery[2]
+            room_map[scenery_y][scenery_x] = scenery_number
+
+            image_here = objects[scenery_number][0]
+            image_width = image_here.get_width()
+            image_width_in_tiles = int(image_width / TILE_SIZE)
+            
+            for tile_number in range(1, image_width_in_tiles):
+                room_map[scenery_y][scenery_x + tile_number] = 255
 
             
 def draw():
     global room_height, room_width, room_map
     generate_map()
     screen.clear()
-    room_map[2][4] = gt("chair_right",val=False)
-    room_map[2][6] = gt("chair_left",val=False)
-    room_map[1][1] = gt("plant",val=False)
     for y in range(room_height):
         for x in range(room_width):
-            image_to_draw = objects[room_map[y][x]][0]
-            screen.blit(image_to_draw
+            if room_map[y][x] != 255:
+                image_to_draw = objects[room_map[y][x]][0]
+                screen.blit(image_to_draw
                         ,(top_left_x + (x*30),
                           top_left_y + (y*30) - image_to_draw.get_height()))
 
