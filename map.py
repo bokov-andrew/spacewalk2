@@ -294,8 +294,18 @@ scenery = {
 for room in range(1, 26):
     if room != 13:
         scenery_item = random.choice([16, 28, 29, 30])
-        scenery[room] = [[scenery_item, random.randint(2, 10),random.randint(2, 10)]]
+        scenery[room] = [[scenery_item, random.randint(2, 10),random.randint(2, 10)]] # random outside items
 
+for room_coordinate in range(0, 13):
+    for room_number in [1, 2, 3, 4, 5]: # add top fence
+        scenery[room_number] += [[31, 0, room_coordinate]]        
+    for room_number in [1, 6, 11, 16, 21]: # add left fence
+        scenery[room_number] += [[31, room_coordinate, 0]]        
+    for room_number in [5, 10, 15, 20, 25]: # add right fence
+        scenery[room_number] += [[31, room_coordinate, 12]]
+        
+del scenery[21][-1]        
+del scenery[25][-1]
 ##############
 ## make map ##
 ##############
