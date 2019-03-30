@@ -9,8 +9,6 @@ import escape_addons
 WIDTH = 800
 HEIGHT =600
 current_room = 31
-player_x = 600
-player_y =350
 top_left_x =100
 top_left_y =150
 room_height =12
@@ -27,6 +25,34 @@ LANDER_X = random.randint(2, 11)
 LANDER_Y = random.randint(2, 11)
 
 TILE_SIZE = 30
+player_y, player_x = 2, 5
+game_over = False
+
+PLAYER = {
+     "left": [images.spacesuit_left, images.spacesuit_left_1,
+              images.spacesuit_left_2, images.spacesuit_left_3,
+              images.spacesuit_left_4
+              ],
+     "right": [images.spacesuit_right, images.spacesuit_right_1,
+              images.spacesuit_right_2, images.spacesuit_right_3,
+              images.spacesuit_right_4
+              ],
+     "up": [images.spacesuit_back, images.spacesuit_back_1,
+              images.spacesuit_back_2, images.spacesuit_back_3,
+              images.spacesuit_back_4
+              ],
+     "down": [images.spacesuit_front, images.spacesuit_front_1,
+              images.spacesuit_front_2, images.spacesuit_front_3,
+              images.spacesuit_front_4
+              ]
+     
+    }
+
+player_direction = "down"
+player_frame = 0
+player_image = PLAYER[player_direction][player_frame]
+player_offset_x, player_offset_y = 0, 0
+
 
 ##############
 ##   Map    ## 
@@ -395,8 +421,77 @@ def generate_map():
             
             for tile_number in range(1, image_width_in_tiles):
                 room_map[scenery_y][scenery_x + tile_number] = 255
+                            
+###############
+## GAME LOOP ##
+###############
 
-            
+def game_loop():
+    global player_x, player_y, current_room
+    global from_player_x, from_player_y
+    global player_image, player_image_shadow
+    global selected_item, item_carrying, energy
+    global player_offset_x, player_offset_y
+    global player_frame, player_direction
+    global room_map
+
+    if game_over:
+        return
+
+    if player_frame > 0:
+        player_frame += 1
+        time.sleep(0.05)
+        if player_frame == 5:
+            player_frame = 0
+            player_offset_x = 0
+            player_offset_y = 0
+    
+    old_player_x = player_x      
+    old_player_y = player_y
+
+    # move if key is pressed
+    if player_frame == 0:
+        if keyboard.right:
+            from_player_x = player_x
+            from_player_y = player_y
+            player_x += 1
+            player_direction = 'right'
+            player_frame = 1
+        elif keyboard.left:
+            from_player_x = player_x
+            from_player_y = player_y
+            player_x -= 1
+            player_direction = 'left'
+            player_frame = 1
+        elif keyboard.up:
+            from_player_x = player_x
+            from_player_y = player_y
+            player_y -= 1
+            player_direction = 'up'
+            player_frame = 1
+        elif keyboard.down:
+            from_player_x = player_x
+            from_player_y = player_y
+            player_y += 1
+            player_direction = 'down'
+            player_frame = 1
+    # collision detection
+    if room_map[player_y][player_x] not in items_player_may_stand_on: #\
+    #          or hazard_map[player_y][player_x] != 0:
+        player_x = old_player_x
+        player_y = old_player_y
+        player_frame = 0
+    if player_direction == "right" and player_frame > 0:
+        player_offset_x = -1 + (0.25 * player_frame)
+    if player_direction == "left" and player_frame > 0:
+        player_offset_x = 1 - (0.25 * player_frame)
+    if player_direction == "up" and player_frame > 0:
+        player_offset_y = 1 - (0.25 * player_frame)
+    if player_direction == "down" and player_frame > 0:
+        player_offset_y = -1 + (0.25 * player_frame)
+
+
+        
 def draw():
     global room_height, room_width, room_map
     generate_map()
@@ -408,6 +503,13 @@ def draw():
                 screen.blit(image_to_draw
                         ,(top_left_x + (x*30),
                           top_left_y + (y*30) - image_to_draw.get_height()))
+        if player_y == y:
+            image_to_draw = PLAYER[player_direction][player_frame]
+            screen.blit(image_to_draw,
+                        (top_left_x + (player_x*30)+(player_offset_x*30),
+                         top_left_y + (player_y*30)+(player_offset_y*30)
+                         - image_to_draw.get_height()))
+                
 
 #how to move
 def movement():
@@ -431,7 +533,8 @@ def movement():
     if current_room != old_room:
         print("Entering room:" + str(current_room))
         
-clock.schedule_interval(movement, 0.1)
+clock.schedule_interval(game_loop, 0.03)
+generate_map()
 
 # This is what launches the game
 pgzrun.go()
