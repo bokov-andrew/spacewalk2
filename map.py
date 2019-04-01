@@ -475,6 +475,36 @@ def game_loop():
             player_y += 1
             player_direction = 'down'
             player_frame = 1
+
+    if player_x in (-1,room_width) or player_y in (-1, room_height):
+        #clock.unscedule(hazard_move)
+        if player_x == room_width: # through door on right
+            current_room += 1
+            generate_map()
+            player_x = 0 # enter at left
+            player_y = int(room_height / 2) # enter at door
+            
+        if player_x == -1: # through door on left
+            current_room -= 1
+            generate_map()
+            player_x = room_width - 1 # enter at right
+            player_y = int(room_height / 2) # enter at door
+            
+        if player_y == room_height: # through door on bottom
+            current_room += MAP_WIDTH
+            generate_map()
+            player_y = 0 # enter at top
+            player_x = int(room_width / 2) # enter at door
+            
+        if player_y == -1: # through door on top
+            current_room -= MAP_WIDTH
+            generate_map()
+            player_y = room_height - 1 # enter at bottom
+            player_x = int(room_width / 2) # enter at door
+        player_frame = 0
+        #start room()
+        return
+        
     # collision detection
     if room_map[player_y][player_x] not in items_player_may_stand_on: #\
     #          or hazard_map[player_y][player_x] != 0:
