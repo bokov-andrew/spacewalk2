@@ -53,6 +53,13 @@ player_frame = 0
 player_image = PLAYER[player_direction][player_frame]
 player_offset_x, player_offset_y = 0, 0
 
+PLAYER_SHADOW = {
+    "left": [images.spacesuit_left_shadow, images.spacesuit_left_1_shadow, images.spacesuit_left_2_shadow, images.spacesuit_left_3_shadow, images.spacesuit_left_3_shadow],
+    "right": [images.spacesuit_right_shadow, images.spacesuit_right_1_shadow, images.spacesuit_right_2_shadow, images.spacesuit_right_3_shadow, images.spacesuit_right_3_shadow],
+    "up": [images.spacesuit_back_shadow, images.spacesuit_back_1_shadow, images.spacesuit_back_2_shadow, images.spacesuit_back_3_shadow, images.spacesuit_back_3_shadow],
+    "down": [images.spacesuit_front_shadow, images.spacesuit_front_1_shadow, images.spacesuit_front_2_shadow, images.spacesuit_front_3_shadow, images.spacesuit_front_3_shadow]
+    }
+
 
 ##############
 ##   Map    ## 
