@@ -550,8 +550,20 @@ def game_loop():
     if player_direction == "down" and player_frame > 0:
         player_offset_y = -1 + (0.25 * player_frame)
 
+###############
+##  display  ##
+###############
 
-        
+def draw_image(image, y, x, shadow = False):
+    yheight = 0 if shadow else image.get_height()
+    screen.blit(
+        image,
+        (top_left_x + (x * TILE_SIZE),
+         top_left_y + (y * TILE_SIZE) - yheight)
+        )
+
+
+
 def draw():
     global room_height, room_width, room_map
     generate_map()
@@ -569,7 +581,11 @@ def draw():
                         (top_left_x + (player_x*30)+(player_offset_x*30),
                          top_left_y + (player_y*30)+(player_offset_y*30)
                          - image_to_draw.get_height()))
-                
+    # testing new function
+    if current_room == 31:
+        #draw_image(objects[34][0],2,3)
+        #draw_image(objects[34][1],2,3, True)
+        pass
 
 #how to move
 def movement():
