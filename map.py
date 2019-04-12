@@ -7,7 +7,7 @@ import escape_addons
 #############
 
 WIDTH = 800
-HEIGHT =600
+HEIGHT =710
 current_room = 31
 top_left_x =100
 top_left_y =150
@@ -451,6 +451,13 @@ def generate_map():
             
             for tile_number in range(1, image_width_in_tiles):
                 room_map[scenery_y][scenery_x + tile_number] = 255
+
+    center_y = int(HEIGHT/2) # center of game window
+    center_x = int(WIDTH/2)
+    room_pixel_width = room_width*TILE_SIZE # size of room in pixels
+    room_pixel_height = room_height*TILE_SIZE
+    top_left_x = center_x - 0.5*room_pixel_width
+    top_left_y = (center_y - 0.5*room_pixel_height) + 110
                             
 ###############
 ## GAME LOOP ##
@@ -562,30 +569,69 @@ def draw_image(image, y, x, shadow = False):
          top_left_y + (y * TILE_SIZE) - yheight)
         )
 
+def draw_player():
+    draw_image (PLAYER[player_direction][player_frame],
+                 player_y + player_offset_y,
+                player_x + player_offset_x)
+    draw_image (PLAYER_SHADOW[player_direction][player_frame],
+                 player_y + player_offset_y,
+                player_x + player_offset_x, True)
 
+def draw_object(obj, y, x):
+    draw_image(objects[obj][0], y, x)
+    if objects[obj][1]:
+        shadow = objects[obj][1]
+        if shadow in [images.half_shadow, images.full_shadow]:
+            shadow_width = int(objects[obj][0].get_width() / TILE_SIZE)
+            # shadow accross width of object
+            for z in range(0, shadow_width):
+                draw_image(shadow, y, x+z, True)
+        else:
+            draw_image(shadow, y, x, True)
+                
 
 def draw():
+    if game_over: return
     global room_height, room_width, room_map
-    generate_map()
-    screen.clear()
+    # clear game arena area
+    box = Rect((0,150),(800,600))
+    screen.draw.filled_rect(box,RED)
+    box = Rect((0,0), (800, top_left_y + (room_height - 1)*30))
+    screen.surface.set_clip(box)
+    floor_type = get_floor_type()
+    #generate_map()
     for y in range(room_height):
         for x in range(room_width):
-            if room_map[y][x] != 255:
-                image_to_draw = objects[room_map[y][x]][0]
-                screen.blit(image_to_draw
-                        ,(top_left_x + (x*30),
-                          top_left_y + (y*30) - image_to_draw.get_height()))
-        if player_y == y:
-            image_to_draw = PLAYER[player_direction][player_frame]
-            screen.blit(image_to_draw,
-                        (top_left_x + (player_x*30)+(player_offset_x*30),
-                         top_left_y + (player_y*30)+(player_offset_y*30)
-                         - image_to_draw.get_height()))
-    # testing new function
-    if current_room == 31:
-        #draw_image(objects[34][0],2,3)
-        #draw_image(objects[34][1],2,3, True)
-        pass
+            draw_object(floor_type,y,x)
+            # allow shadows on top of objects on floor
+            if room_map[y][x] in items_player_may_stand_on:
+                draw_object(room_map[y][x],y,x)
+            #if room_map[y][x] != 255:
+            #    image_to_draw = objects[room_map[y][x]][0]
+            #    screen.blit(image_to_draw
+            #            ,(top_left_x + (x*30),
+            #              top_left_y + (y*30) - image_to_draw.get_height()))
+    # pressure pad in room 26
+    if current_room == 26:
+        draw_object(39,8,2)
+        image_on_pad = room_map[8][2]
+        if image_on_pad > 0:
+            draw_object(image_on_pad,8,2)
+            
+    for y in range(room_height):
+        for x in range(room_width):
+            item_here = room_map[y][x]
+            # player cannot walk on 255-- marks spaces used by wide objects
+            if item_here not in items_player_may_stand_on + [255]:
+                if y == room_height - 1 and item_here == 1 \
+                    and (current_room in outdoor_rooms or \
+                         ( x > 0 and x < room_width -1)):
+                        draw_image(PILLARS[wall_transparency_frame],y,x)
+                else: draw_object(item_here,y,x)
+            
+        if player_y == y: draw_player()
+
+    screen.surface.set_clip(None)
 
 #how to move
 def movement():
