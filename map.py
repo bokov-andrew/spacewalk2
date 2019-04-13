@@ -458,10 +458,17 @@ def generate_map():
     room_pixel_height = room_height*TILE_SIZE
     top_left_x = center_x - 0.5*room_pixel_width
     top_left_y = (center_y - 0.5*room_pixel_height) + 110
+
+    for prop_number, prop_info in props.items():
+        prop_room = prop_info[0]
+        prop_y = prop_info[1]
+        prop_x = prop_info[2]
                             
 ###############
 ## GAME LOOP ##
 ###############
+
+def start_room(): show_text("you are here: "+ room_name, 0)
 
 def game_loop():
     global player_x, player_y, current_room
@@ -539,7 +546,7 @@ def game_loop():
             player_y = room_height - 1 # enter at bottom
             player_x = int(room_width / 2) # enter at door
         player_frame = 0
-        #start room()
+        start_room()
         return
         
     # collision detection
@@ -588,7 +595,14 @@ def draw_object(obj, y, x):
                 draw_image(shadow, y, x+z, True)
         else:
             draw_image(shadow, y, x, True)
-                
+def show_text(text_to_show, line_number):
+    if game_over:
+        return
+    text_lines = [15, 50]
+    box = Rect((0, text_lines[line_number]), (800, 35))
+    screen.draw.filled_rect(box, BLACK)
+    screen.draw.text(text_to_show,
+        (20, text_lines[line_number]), color=GREEN)
 
 def draw():
     if game_over: return
@@ -632,6 +646,31 @@ def draw():
         if player_y == y: draw_player()
 
     screen.surface.set_clip(None)
+
+###############
+##   PROPS   ##
+###############
+
+# Props are objects that may move between rooms, appear or disappear.
+# All props must be set up here. Props not yet in the game go into room 0.
+# object number : [room, y, x]
+props = {
+    20: [31, 0, 4], 21: [26, 0, 1], 22: [41, 0, 2], 23: [39, 0, 5],
+    24: [45, 0, 2],
+    25: [32, 0, 2], 26: [27, 12, 5], # two sides of same door
+    40: [0, 8, 6], 53: [45, 1, 5], 54: [0, 0, 0], 55: [0, 0, 0],
+    56: [0, 0, 0], 57: [35, 4, 6], 58: [0, 0, 0], 59: [31, 1, 7],
+    60: [0, 0, 0], 61: [36, 1, 1], 62: [36, 1, 6], 63: [0, 0, 0],
+    64: [27, 8, 3], 65: [50, 1, 7], 66: [39, 5, 6], 67: [46, 1, 1],
+    68: [0, 0, 0], 69: [30, 3, 3], 70: [47, 1, 3],
+    71: [0, LANDER_Y, LANDER_X], 72: [0, 0, 0], 73: [27, 4, 6], 
+    74: [28, 1, 11], 75: [0, 0, 0], 76: [41, 3, 5], 77: [0, 0, 0],
+    78: [35, 9, 11], 79: [26, 3, 2], 80: [41, 7, 5], 81: [29, 1, 1]
+    }
+
+in_my_pockets = [55]
+selected_item = 0 # the first item
+item_carrying = in_my_pockets[selected_item]
 
 #how to move
 def movement():
