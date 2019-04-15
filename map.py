@@ -463,6 +463,12 @@ def generate_map():
         prop_room = prop_info[0]
         prop_y = prop_info[1]
         prop_x = prop_info[2]
+        if(prop_room == current_room and room_map[prop_y][prop_x] in [0, 39, 2]):
+            room_map[prop_y][prop_x] = prop_number
+            image_here = objects[prop_number][0]
+            image_width_tiles = int(image_here.get_width()/TILE_SIZE)
+            for tile_number in range(1, image_width_tiles):
+                room_map[prop_y][prop_x + tile_number] = 255
                             
 ###############
 ## GAME LOOP ##
@@ -548,6 +554,8 @@ def game_loop():
         player_frame = 0
         start_room()
         return
+
+    if keyboard.g: pick_up_object()
         
     # collision detection
     if room_map[player_y][player_x] not in items_player_may_stand_on: #\
@@ -671,6 +679,50 @@ props = {
 in_my_pockets = [55]
 selected_item = 0 # the first item
 item_carrying = in_my_pockets[selected_item]
+
+#prop commands
+def find_object_start_x():
+    checker_x = player_x
+    while room_map[player_y][checker_x] == 255:
+        checker_x -= 1
+    return checker_x
+
+def get_item_under_player():
+     return room_map[player_y][find_object_start_x()]
+
+def pick_up_object():
+    global room_map
+    item_player_is_on = get_item_under_player()
+    if item_player_is_on in items_player_may_carry:
+        room_map[player_y][player_x] = get_floor_type()
+        add_object(item_player_is_on)
+        show_text("Now carrying " + objects[item_player_is_on][3], 0)
+    else: show_text("You can't carry that!", 0)
+
+def add_object(item): # adds items to inventory.
+    global selected_item, item_carrying
+    in_my_pockets.append(item)
+    item_carrying = item
+    selected_item = len(in_my_pockets) - 1
+    display_inventory()
+    props[item][0] = 0 # carried objects go into room 0
+
+def display_inventory():
+    box = Rect((0, 45), (800, 105))
+    screen.draw.filled_rect(box, BLACK)
+
+    if len(in_my_pockets) == 0: return
+    
+    start_display = (selected_item // 16) * 16
+    list_to_show = in_my_pockets[start_display : start_display + 16]
+    selected_marker = selected_item % 16
+
+    for item_counter in range(len(list_to_show)):
+        item_number = list_to_show[item_counter]
+        image = objects[item_number][0]
+        screen.blit(image, (25 + (46*item_number),90))
+    
+
 
 #how to move
 def movement():
