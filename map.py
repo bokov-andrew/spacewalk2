@@ -556,7 +556,14 @@ def game_loop():
         return
 
     if keyboard.g: pick_up_object()
-        
+
+    if keyboard.tab and len(in_my_pockets) > 0:
+        selected_item += 1
+        if selected_item > len(in_my_pockets) - 1:
+            selected_item = 0
+        item_carrying = in_my_pockets[selected_item]
+        display_inventory()
+            
     # collision detection
     if room_map[player_y][player_x] not in items_player_may_stand_on: #\
     #          or hazard_map[player_y][player_x] != 0:
@@ -720,9 +727,14 @@ def display_inventory():
     for item_counter in range(len(list_to_show)):
         item_number = list_to_show[item_counter]
         image = objects[item_number][0]
-        screen.blit(image, (25 + (46*item_number),90))
-    
+        screen.blit(image, (25 + (46*item_counter),90))
 
+    box_left = (selected_marker * 46) - 3
+    box = Rect((22 + box_left, 85), (40, 40))
+    screen.draw.rect(box, WHITE)
+    item_hilighted = in_my_pockets[selected_item]
+    description = objects[item_hilighted][2]
+    screen.draw.text(description, (20, 130), color="white")
 
 #how to move
 def movement():
@@ -748,6 +760,7 @@ def movement():
         
 clock.schedule_interval(game_loop, 0.03)
 generate_map()
+clock.schedule_unique(display_inventory, 4)
 
 # This is what launches the game
 pgzrun.go()
