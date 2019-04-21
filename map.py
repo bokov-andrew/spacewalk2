@@ -687,6 +687,8 @@ in_my_pockets = [55]
 selected_item = 0 # the first item
 item_carrying = in_my_pockets[selected_item]
 
+import e_addons; e_addons.patchfun(globals())
+
 #prop commands
 def find_object_start_x():
     checker_x = player_x
