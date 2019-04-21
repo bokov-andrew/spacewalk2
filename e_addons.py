@@ -56,26 +56,22 @@ def patchfun(envir):
     global hints_given
     envir['objects'].update(objects_patch)
     envir['props'].update(props_patch)
-    envir['items_player_may_stand_on'] += objects_patch #[82,83]
-    envir['items_player_may_carry'] += objects_patch #[82,83]
+    envir['items_player_may_stand_on'] += objects_patch 
+    envir['items_player_may_carry'] += objects_patch 
     for ii in map_patch: envir['GAME_MAP'][ii][0] = map_patch[ii]
 
     #if not hints_given:
     print('\n','-'*37)
-    #print('\nMESSAGES (possibly clues) FOR ANDREW:')
     print(u'\nСООБЩЕНИЯ (возможно, подсказки) ДЛЯ АНДРЮШИ:')
     # check if wall transparency implemented and give hint if not
     if 'adjust_wall_transparency' not in envir:
-      #print("\nNo wall transparency yet. That makes it harder to find the first egg.")
       print(u'\nПока нет прозрачности стен. Это затрудняет поиск первого яйца.\n')
     else:
       print(u"\nХорошо, ты уже написал функцию adjust_wall_transparency(). Она поможет тебе сегодня\n")
     # check if doors implemented and give hint if not
     if len(set(('door_in_room_26','open_door')) & set(envir)) < 2:
-      #print("\nYou don't yet have working doors. You'll need to get through doors for the second egg.\n")
       print(u"\nУ тебя еще нет действующих дверей. Нужно будет пройти через двери чтобы найти второе яйцо.\n")
     else:
-      #print("\nAh, good, you have door-opening functions. Hopefully you have everything else you need to get outside.\n")
       print(u"\nАх, хорошо, у тебя есть функции для открытия дверей. Надеюсь, также есть все остальное нужное чтобы выйти на Марс.\n")
     # general hint/s
     print(u"\nВ самом коде тоже подсказки. Особенно в комментариях. Какие новые файлы в етой версии? Их не плохо бы просмотреть...\n")
