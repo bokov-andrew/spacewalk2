@@ -1,8 +1,6 @@
 import pgzrun
 import codecs
 from pgzero.loaders import ImageLoader
-# DELETE LATER:
-#from easter_utils import pri,pri1,fib,collatz,eb,_safe
 
 hints_given = False
 
