@@ -556,6 +556,7 @@ def game_loop():
         return
 
     if keyboard.g: pick_up_object()
+    if keyboard.u: use_object()
 
     if keyboard.tab and len(in_my_pockets) > 0:
         selected_item += 1
@@ -583,6 +584,19 @@ def game_loop():
 ##  display  ##
 ###############
 
+def adjust_wall_transperency():
+    global wall_transparency_frame
+
+    if (player_y == room_height - 2
+        and room_map[room_height - 1][player_x] == 1
+        and wall_transparency_frame < 4):
+        wall_transparency_frame += 1 # fade wall out
+
+    if ((player_y < room_height - 2
+         or room_map[room_height - 1][player_x] != 1)
+        and wall_transparency_frame > 0):
+        wall_transparency_frame -= 1 # fade wall in
+     
 def draw_image(image, y, x, shadow = False):
     yheight = 0 if shadow else image.get_height()
     screen.blit(
@@ -683,7 +697,7 @@ props = {
     78: [35, 9, 11], 79: [26, 3, 2], 80: [41, 7, 5], 81: [29, 1, 1]
     }
 
-in_my_pockets = [55]
+in_my_pockets = [55,79,80,81]
 selected_item = 0 # the first item
 item_carrying = in_my_pockets[selected_item]
 
@@ -738,6 +752,26 @@ def display_inventory():
     description = objects[item_hilighted][2]
     screen.draw.text(description, (20, 130), color="white")
 
+def use_object():
+    global room_map, props, item_carrying, air, selected_item, energy
+    global in_my_pockets, suit_stitched, air_fixed, game_over
+
+    use_message = {}
+
+    #{key object number: door object number}
+    ACCESS_DICTIONARY = {79:22, 80:23, 81:24
+                         # this is just a cheat to get the first door open
+                         ,55:20 }
+    if item_carrying in ACCESS_DICTIONARY:
+        door_number = ACCESS_DICTIONARY[item_carrying]
+        if props[door_number][0] == current_room:
+            use_message = 'You unlock the door!'
+            sounds.say_doors_open.play()
+            sounds.doors.play()
+            open_door(door_number)
+
+    
+
 #how to move
 def movement():
     global current_room
@@ -759,9 +793,45 @@ def movement():
         print("Bonk! Hit edge of game")
     if current_room != old_room:
         print("Entering room:" + str(current_room))
+
+###########
+## DOORS ##
+###########
         
+def open_door(opening_door_number):
+    global door_frames, door_shadow_frames
+    global door_frame_number, door_object_number
+    door_frames = [images.door1, images.door2, images.door3, images.door4, images.floor]
+    door_shadow_frames = [images.door1_shadow,
+                          images.door2_shadow,
+                          images.door3_shadow, images.door4_shadow,
+                          images.door_shadow]
+    door_frame_number = 0
+    door_object_number = opening_door_number
+    do_door_animation()
+
+def do_door_animation():
+    global door_frames, door_frame_number, door_object_number, objects
+    objects[door_object_number][0] = door_frames[door_frame_number]
+    objects[door_object_number][1] = door_shadow_frames[door_frame_number]
+    door_frame_number += 1
+    if door_frame_number == 5:
+        if door_frames[-1] == image.floor:
+            props[door_object_number][0] = 0 # remove door from props list
+            # regenerate room map to put the door in the room if needed
+            generate_map()
+        else:
+            clock.schedule(do_door_animation,0.15)
+
+
+    
+    
+###########
+## START ##
+###########
 clock.schedule_interval(game_loop, 0.03)
 generate_map()
+clock.schedule_interval(adjust_wall_transperency, 0.05)
 clock.schedule_unique(display_inventory, 4)
 
 # This is what launches the game
