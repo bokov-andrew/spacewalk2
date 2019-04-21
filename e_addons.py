@@ -60,9 +60,6 @@ def patchfun(envir):
     envir['items_player_may_carry'] += objects_patch #[82,83]
     for ii in map_patch: envir['GAME_MAP'][ii][0] = map_patch[ii]
 
-    # temporary, for debugging
-    envir['items_player_may_stand_on'] += [*range(20,27)]
-
     #if not hints_given:
     print('\n','-'*37)
     #print('\nMESSAGES (possibly clues) FOR ANDREW:')
