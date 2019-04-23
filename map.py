@@ -2,6 +2,7 @@
 import pgzrun,time,random,math,subprocess
 import escape_addons
 
+
 #############
 # Variables #
 #############
@@ -564,6 +565,7 @@ def game_loop():
             selected_item = 0
         item_carrying = in_my_pockets[selected_item]
         display_inventory()
+        time.sleep(0.5)
             
     # collision detection
     if room_map[player_y][player_x] not in items_player_may_stand_on: #\
@@ -759,9 +761,9 @@ def use_object():
     use_message = {}
 
     #{key object number: door object number}
-    ACCESS_DICTIONARY = {79:22, 80:23, 81:24
+    ACCESS_DICTIONARY = {79:22, 80:23, 81:24,
                          # this is just a cheat to get the first door open
-                         ,55:20 }
+                         82:21, 55:20 }
     if item_carrying in ACCESS_DICTIONARY:
         door_number = ACCESS_DICTIONARY[item_carrying]
         if props[door_number][0] == current_room:
@@ -801,7 +803,8 @@ def movement():
 def open_door(opening_door_number):
     global door_frames, door_shadow_frames
     global door_frame_number, door_object_number
-    door_frames = [images.door1, images.door2, images.door3, images.door4, images.floor]
+    door_frames = [images.door1, images.door2, images.door3, images.door4,
+                   images.floor]
     door_shadow_frames = [images.door1_shadow,
                           images.door2_shadow,
                           images.door3_shadow, images.door4_shadow,
@@ -812,16 +815,17 @@ def open_door(opening_door_number):
 
 def do_door_animation():
     global door_frames, door_frame_number, door_object_number, objects
-    objects[door_object_number][0] = door_frames[door_frame_number]
+    try: objects[door_object_number][0] = door_frames[door_frame_number]
+    except: print("door object = ",door_object_number, "door frame = ", door_frame_number)
     objects[door_object_number][1] = door_shadow_frames[door_frame_number]
     door_frame_number += 1
     if door_frame_number == 5:
-        if door_frames[-1] == image.floor:
+        if door_frames[-1] == images.floor:
             props[door_object_number][0] = 0 # remove door from props list
             # regenerate room map to put the door in the room if needed
             generate_map()
-        else:
-            clock.schedule(do_door_animation,0.15)
+    else:
+        clock.schedule(do_door_animation,0.15)
 
 
     
