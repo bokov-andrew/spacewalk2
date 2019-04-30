@@ -566,6 +566,8 @@ def game_loop():
         item_carrying = in_my_pockets[selected_item]
         display_inventory()
         time.sleep(0.5)
+    if keyboard.space:
+        examine_object()
             
     # collision detection
     if room_map[player_y][player_x] not in items_player_may_stand_on: #\
@@ -828,6 +830,24 @@ def do_door_animation():
         clock.schedule(do_door_animation,0.15)
 
 
+def examine_object():
+    item_player_is_on = get_item_under_player()
+    left_tile_of_item = find_object_start_x()
+    if item_player_is_on in [0,2]: # don't describe the floor
+        return
+    description = "You see: " + objects[item_player_is_on][2]
+    for prop_number, details in props.items():
+        # props = object number: [room number, y, x]
+        if details[0] == current_room: # if prop is in the room
+            # if prop is hidden at player's location but not on map
+            if (details[1] == player_y
+            and details[2] == left_tile_of_item
+            and room_map[details[1]][details[2]] != prop_number):
+                add_object(prop_number)
+                description = "You found " + object[prop_number][3]
+                sounds.combine.play()
+    show_text(description,0)
+    time.sleep(0.5)
     
     
 ###########
