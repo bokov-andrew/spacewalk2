@@ -2,6 +2,7 @@
 import pgzrun,time,random,math,subprocess
 import escape_addons
 
+
 #############
 # Variables #
 #############
@@ -556,6 +557,7 @@ def game_loop():
         return
 
     if keyboard.g: pick_up_object()
+    if keyboard.u: use_object()
 
     if keyboard.tab and len(in_my_pockets) > 0:
         selected_item += 1
@@ -563,6 +565,9 @@ def game_loop():
             selected_item = 0
         item_carrying = in_my_pockets[selected_item]
         display_inventory()
+        time.sleep(0.5)
+    if keyboard.space:
+        examine_object()
             
     # collision detection
     if room_map[player_y][player_x] not in items_player_may_stand_on: #\
@@ -583,6 +588,19 @@ def game_loop():
 ##  display  ##
 ###############
 
+def adjust_wall_transperency():
+    global wall_transparency_frame
+
+    if (player_y == room_height - 2
+        and room_map[room_height - 1][player_x] == 1
+        and wall_transparency_frame < 4):
+        wall_transparency_frame += 1 # fade wall out
+
+    if ((player_y < room_height - 2
+         or room_map[room_height - 1][player_x] != 1)
+        and wall_transparency_frame > 0):
+        wall_transparency_frame -= 1 # fade wall in
+     
 def draw_image(image, y, x, shadow = False):
     yheight = 0 if shadow else image.get_height()
     screen.blit(
@@ -683,9 +701,11 @@ props = {
     78: [35, 9, 11], 79: [26, 3, 2], 80: [41, 7, 5], 81: [29, 1, 1]
     }
 
-in_my_pockets = [55]
+in_my_pockets = [55,79,80,81]
 selected_item = 0 # the first item
 item_carrying = in_my_pockets[selected_item]
+
+
 
 #prop commands
 def find_object_start_x():
@@ -736,6 +756,57 @@ def display_inventory():
     description = objects[item_hilighted][2]
     screen.draw.text(description, (20, 130), color="white")
 
+def use_object():
+    global room_map, props, item_carrying, air, selected_item, energy
+    global in_my_pockets, suit_stitched, air_fixed, game_over
+
+    use_message = "nope"
+    standard_responses = {
+        4: "Air is running out! You can't take this lying down!",
+        6: "This is no time to sit around!",
+        7: "This is no time to sit around!",
+        32: "It shakes and rumbles, but nothing else happens.",
+        34: "Ah! That's better. Now wash your hands.",
+        35: "You wash your hands and shake the water off.",
+        37: "The test tubes smoke slightly as you shake them.",
+        54: "You chew the gum. It's sticky like glue.",
+        55: "The yoyo bounces up and down, slightly slower than on Earth",
+        56: "It's a bit too fiddly. Can you thread it on something?",
+        59: "You need to fix the leak before you can use the canister",
+        61: "You try signalling with the mirror, but nobody can see you.",
+        62: "Don't throw resources away. Things might come in handy...",
+        67: "To enjoy yummy space food, just add water!",
+        75: "You are at Sector: " + str(current_room) + " // X: " \
+                + str(player_x) + " // Y: " + str(player_y)}
+    item_player_is_on = get_item_under_player()
+    for this_item in [item_player_is_on, item_carrying]:
+        if this_item in standard_responses:
+            use_message = standard_responses[this_item]
+    #{key object number: door object number}
+    ACCESS_DICTIONARY = {79:22, 80:23, 81:24,
+                         # this is just a cheat to get the first door open
+                         59:21, 55:20 }
+    if item_carrying in ACCESS_DICTIONARY:
+        door_number = ACCESS_DICTIONARY[item_carrying]
+        if props[door_number][0] == current_room:
+            use_message = 'You unlock the door!'
+            sounds.say_doors_open.play()
+            sounds.doors.play()
+            open_door(door_number)
+    elif (item_carrying == 66 or item_player_is_on == 66) \
+         and current_room in outdoor_rooms:
+        use_message = "you dig"
+        if(current_room == LANDER_SECTOR):
+            add_object(71)
+            use_message = "you found the poodle lander"
+    
+
+    show_text(use_message, 0)
+    time.sleep(0.5)
+
+
+    
+
 #how to move
 def movement():
     global current_room
@@ -757,9 +828,65 @@ def movement():
         print("Bonk! Hit edge of game")
     if current_room != old_room:
         print("Entering room:" + str(current_room))
+
+###########
+## DOORS ##
+###########
         
+def open_door(opening_door_number):
+    global door_frames, door_shadow_frames
+    global door_frame_number, door_object_number
+    door_frames = [images.door1, images.door2, images.door3, images.door4,
+                   images.floor]
+    door_shadow_frames = [images.door1_shadow,
+                          images.door2_shadow,
+                          images.door3_shadow, images.door4_shadow,
+                          images.door_shadow]
+    door_frame_number = 0
+    door_object_number = opening_door_number
+    do_door_animation()
+
+def do_door_animation():
+    global door_frames, door_frame_number, door_object_number, objects
+    try: objects[door_object_number][0] = door_frames[door_frame_number]
+    except: print("door object = ",door_object_number, "door frame = ", door_frame_number)
+    objects[door_object_number][1] = door_shadow_frames[door_frame_number]
+    door_frame_number += 1
+    if door_frame_number == 5:
+        if door_frames[-1] == images.floor:
+            props[door_object_number][0] = 0 # remove door from props list
+            # regenerate room map to put the door in the room if needed
+            generate_map()
+    else:
+        clock.schedule(do_door_animation,0.15)
+
+
+def examine_object():
+    item_player_is_on = get_item_under_player()
+    left_tile_of_item = find_object_start_x()
+    if item_player_is_on in [0,2]: # don't describe the floor
+        return
+    description = "You see: " + objects[item_player_is_on][2]
+    for prop_number, details in props.items():
+        # props = object number: [room number, y, x]
+        if details[0] == current_room: # if prop is in the room
+            # if prop is hidden at player's location but not on map
+            if (details[1] == player_y
+            and details[2] == left_tile_of_item
+            and room_map[details[1]][details[2]] != prop_number):
+                add_object(prop_number)
+                description = "You found " + object[prop_number][3]
+                sounds.combine.play()
+    show_text(description,0)
+    time.sleep(0.5)
+    
+    
+###########
+## START ##
+###########
 clock.schedule_interval(game_loop, 0.03)
 generate_map()
+clock.schedule_interval(adjust_wall_transperency, 0.05)
 clock.schedule_unique(display_inventory, 4)
 
 # This is what launches the game
